@@ -1,20 +1,19 @@
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
-    QVBoxLayout, QComboBox, QMessageBox, QTextEdit
+    QVBoxLayout, QComboBox, QMessageBox
 )
 from models import BankAccount, SavingsAccount
-
 
 class BankApp(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Bank GUI")
-        self.setGeometry(400, 200, 450, 500)
+        self.setGeometry(400, 200, 400, 400)
 
         self.account = None  # Current account object
 
-        # ---------------- Account Creation Widgets ----------------
+        # Widgets
         self.owner_label = QLabel("Account Owner:")
         self.owner_input = QLineEdit()
 
@@ -34,10 +33,10 @@ class BankApp(QWidget):
         self.create_btn = QPushButton("Create Account")
         self.create_btn.clicked.connect(self.create_account)
 
-        # ---------------- After Account Creation Widgets ----------------
         self.balance_display = QLabel("Current Balance: $0.00")
         self.balance_display.hide()
 
+        # Transaction widgets
         self.amount_input = QLineEdit()
         self.amount_input.setPlaceholderText("Enter amount")
         self.amount_input.hide()
@@ -54,17 +53,8 @@ class BankApp(QWidget):
         self.interest_btn.hide()
         self.interest_btn.clicked.connect(self.apply_interest)
 
-        # Transaction History
-        self.history_label = QLabel("Transaction History:")
-        self.history_label.hide()
-
-        self.history = QTextEdit()
-        self.history.setReadOnly(True)
-        self.history.hide()
-
-        # ---------------- Layout ----------------
+        # Layout
         layout = QVBoxLayout()
-        # Account creation section
         layout.addWidget(self.owner_label)
         layout.addWidget(self.owner_input)
         layout.addWidget(self.balance_label)
@@ -74,21 +64,15 @@ class BankApp(QWidget):
         layout.addWidget(self.interest_label)
         layout.addWidget(self.interest_input)
         layout.addWidget(self.create_btn)
-
-        # After account creation section
         layout.addWidget(self.balance_display)
         layout.addWidget(self.amount_input)
         layout.addWidget(self.deposit_btn)
         layout.addWidget(self.withdraw_btn)
         layout.addWidget(self.interest_btn)
-        layout.addWidget(self.history_label)
-        layout.addWidget(self.history)
 
         self.setLayout(layout)
 
-    # ---------------- Helper Functions ----------------
     def toggle_interest_field(self, text):
-        """Show/Hide interest input for Savings account"""
         if text == "Savings":
             self.interest_label.show()
             self.interest_input.show()
@@ -97,7 +81,6 @@ class BankApp(QWidget):
             self.interest_input.hide()
 
     def create_account(self):
-        """Create Bank or Savings Account"""
         owner = self.owner_input.text()
         try:
             balance = float(self.balance_input.text())
@@ -106,6 +89,7 @@ class BankApp(QWidget):
             return
 
         acc_type = self.type_combo.currentText()
+
         if acc_type == "Savings":
             try:
                 rate = float(self.interest_input.text())
@@ -117,50 +101,37 @@ class BankApp(QWidget):
         else:
             self.account = BankAccount(owner, balance)
 
-        # Hide account creation fields
-        self.owner_label.hide()
-        self.owner_input.hide()
-        self.balance_label.hide()
-        self.balance_input.hide()
-        self.type_label.hide()
-        self.type_combo.hide()
-        self.interest_label.hide()
-        self.interest_input.hide()
-        self.create_btn.hide()
-
-        # Show transaction section
+        # Show transaction widgets
         self.balance_display.show()
-        self.amount_input.show()
         self.deposit_btn.show()
         self.withdraw_btn.show()
-        self.history_label.show()
-        self.history.show()
+        self.amount_input.show()
 
-        # Update balance display and history
         self.balance_display.setText(f"Current Balance: ${self.account.balance:.2f}")
-        self.log_history(f"Account created for {owner} with balance ${balance:.2f}")
         QMessageBox.information(self, "Success", f"Account created for {owner}!")
 
     def deposit(self):
+        if not self.account:
+            QMessageBox.warning(self, "Error", "Create an account first!")
+            return
         try:
             amount = float(self.amount_input.text())
-            if self.account.deposit(amount):
-                self.balance_display.setText(f"Current Balance: ${self.account.balance:.2f}")
-                self.log_history(f"Deposited: ${amount:.2f}")
-            else:
-                QMessageBox.warning(self, "Error", "Invalid deposit amount!")
+            self.account.deposit(amount)
+            self.balance_display.setText(f"Current Balance: ${self.account.balance:.2f}")
         except ValueError:
             QMessageBox.warning(self, "Error", "Invalid amount!")
 
     def withdraw(self):
+        if not self.account:
+            QMessageBox.warning(self, "Error", "Create an account first!")
+            return
         try:
             amount = float(self.amount_input.text())
             success = self.account.withdraw(amount)
-            if success:
-                self.balance_display.setText(f"Current Balance: ${self.account.balance:.2f}")
-                self.log_history(f"Withdrawn: ${amount:.2f}")
+            if not success:
+                QMessageBox.warning(self, "Error", "Insufficient balance or minimum limit!")
             else:
-                QMessageBox.warning(self, "Error", "Insufficient balance or minimum $50 required!")
+                self.balance_display.setText(f"Current Balance: ${self.account.balance:.2f}")
         except ValueError:
             QMessageBox.warning(self, "Error", "Invalid amount!")
 
@@ -168,14 +139,8 @@ class BankApp(QWidget):
         if isinstance(self.account, SavingsAccount):
             self.account.apply_interest()
             self.balance_display.setText(f"Current Balance: ${self.account.balance:.2f}")
-            self.log_history("Interest Applied")
         else:
             QMessageBox.warning(self, "Error", "Interest applies only to Savings Account!")
-
-    def log_history(self, message):
-        """Add message to transaction history"""
-        self.history.append(message)
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

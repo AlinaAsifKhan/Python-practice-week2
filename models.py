@@ -1,14 +1,18 @@
+# Step 1: Models - BankAccount and SavingsAccount
+
 class BankAccount:
     def __init__(self, owner, balance=0):
         self.owner = owner
-        self.balance = float(balance)
+        self.balance = float(balance)  # Ensure numeric balance
 
+    # Deposit amount
     def deposit(self, amount):
         if amount > 0:
             self.balance += amount
             return True
         return False
 
+    # Withdraw amount (only if sufficient balance)
     def withdraw(self, amount):
         if 0 < amount <= self.balance:
             self.balance -= amount
@@ -24,12 +28,13 @@ class SavingsAccount(BankAccount):
         super().__init__(owner, balance)  # Call Parent __init__
         self.interest_rate = interest_rate
 
-    # Overriding 
+    # Overridden withdraw: Must maintain minimum $50 after withdrawal
     def withdraw(self, amount):
-        if self.balance - amount >= 50:  # Minimum Rs.50
+        if self.balance - amount >= 50:
             self.balance -= amount
             return True
         return False
 
+    # Apply interest to balance
     def apply_interest(self):
         self.balance += self.balance * self.interest_rate

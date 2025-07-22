@@ -1,0 +1,35 @@
+import sys
+from PyQt5.QtWidgets import (QApplication,QWidget,QLabel, QLineEdit, 
+                            QVBoxLayout, QComboBox)
+from models import BankAccount, SavingsAccount
+
+class BankApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Bank App")
+        self.setGeometry(400, 200, 400, 300)
+        
+        self.account = None
+
+        self.owner_label = QLabel("Account Owner:")
+        self.owner_input = QLineEdit()
+
+        self.balance_label = QLabel("Starting Balance:")
+        self.balance_input = QLineEdit()
+
+        self.type_label = QLabel("Account Type:")
+        self.type_combo = QComboBox()
+        self.type_combo.addItems(["Bank", "Savings"])
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.owner_label)
+        layout.addWidget(self.owner_input)
+        layout.addWidget(self.type_combo)
+
+        self.setLayout(layout)
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = BankApp()
+    window.show()
+    sys.exit(app.exec_())
